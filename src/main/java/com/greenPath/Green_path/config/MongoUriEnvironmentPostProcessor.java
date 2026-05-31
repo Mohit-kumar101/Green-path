@@ -15,10 +15,23 @@ public class MongoUriEnvironmentPostProcessor implements EnvironmentPostProcesso
 
 	@Override
 	public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
-		MongoUriSources.resolve(environment::getProperty).ifPresent(uri -> {
+		var resolved = MongoUriSources.resolve(environment::getProperty);
+		if (resolved.isPresent()) {
 			Map<String, Object> properties = new HashMap<>();
-			properties.put("spring.data.mongodb.uri", uri);
+			properties.put("spring.data.mongodb.uri", resolved.get());
 			environment.getPropertySources().addFirst(new MapPropertySource("resolvedMongoUri", properties));
-		});
+			return;
+		}
+		if (!isLocalProfile(environment)) {
+			throw new IllegalStateException(
+					"No MongoDB URI in the environment. Set MONGODB_URI on your host "
+							+ "(Render: web service → Environment → Add variable). "
+							+ "Accepted names: " + MongoUriSources.ENV_KEYS + ". "
+							+ "Local dev: use profile 'local' or export MONGODB_URI.");
+		}
+	}
+
+	private static boolean isLocalProfile(ConfigurableEnvironment environment) {
+		return environment.acceptsProfiles(org.springframework.core.env.Profiles.of("local"));
 	}
 }

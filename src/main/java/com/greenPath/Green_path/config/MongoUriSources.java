@@ -8,9 +8,10 @@ import java.util.Optional;
 
 final class MongoUriSources {
 
+	/** MONGODB_URI first — avoid a blank/wrong SPRING_DATA_MONGODB_URI shadowing it on Render. */
 	static final List<String> ENV_KEYS = List.of(
-			"SPRING_DATA_MONGODB_URI",
 			"MONGODB_URI",
+			"SPRING_DATA_MONGODB_URI",
 			"MONGO_URI",
 			"MONGO_URL",
 			"DATABASE_URL");
@@ -26,6 +27,9 @@ final class MongoUriSources {
 	static Optional<String> resolve(ConfigurableEnvironmentAccessor environment) {
 		for (String key : ENV_KEYS) {
 			String value = trimToNull(environment.getProperty(key));
+			if (value == null) {
+				value = trimToNull(System.getenv(key));
+			}
 			if (value != null) {
 				return Optional.of(value);
 			}

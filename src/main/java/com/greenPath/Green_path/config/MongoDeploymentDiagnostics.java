@@ -1,5 +1,10 @@
 package com.greenPath.Green_path.config;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -49,6 +54,27 @@ public class MongoDeploymentDiagnostics implements InfoContributor {
 					envVarPresence);
 		} else {
 			log.info("MongoDB host: {} (Render service: {})", hostHint, renderServiceName);
+		}
+		if (!renderServiceName.isBlank()) {
+			logRenderOutboundIpForAtlas();
+		}
+	}
+
+	private void logRenderOutboundIpForAtlas() {
+		try {
+			HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
+			HttpRequest request = HttpRequest.newBuilder()
+					.uri(URI.create("https://api.ipify.org"))
+					.timeout(Duration.ofSeconds(5))
+					.GET()
+					.build();
+			String ip = client.send(request, HttpResponse.BodyHandlers.ofString()).body().trim();
+			log.info(
+					"Render outbound IP (for Atlas Network Access): {} — also add all CIDR ranges from "
+							+ "Dashboard → your service → Connect → Outbound, or use 0.0.0.0/0 while testing.",
+					ip);
+		} catch (Exception e) {
+			log.warn("Could not detect Render outbound IP for Atlas allowlist: {}", e.getMessage());
 		}
 	}
 
