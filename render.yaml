@@ -1,16 +1,12 @@
 # Render Blueprint — connect repo at https://dashboard.render.com/blueprints
-# After deploy, set PUBLIC_BASE_URL to your service URL (see DEPLOY guide in README or team docs).
 services:
   - type: web
-    name: shrinkpath
+    name: green-path
     runtime: docker
     plan: free
     healthCheckPath: /actuator/health
+    # Add MONGODB_URI and PUBLIC_BASE_URL in the Render dashboard (Environment tab).
     envVars:
-      - key: MONGODB_URI
-        sync: false
-      - key: PUBLIC_BASE_URL
-        sync: false
       - key: URL_REQUIRE_HTTPS
         value: "true"
       - key: CLICK_FINGERPRINT_SALT
