@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>ShrinkPath</title>
+  <link rel="icon" href="/branding/shrinkpath-icon-192.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg0: #080c12;
+      --bg1: #0d1520;
+      --surface: rgba(22, 32, 48, 0.78);
+      --surface2: rgba(15, 23, 42, 0.96);
+      --border: rgba(100, 116, 139, 0.38);
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #8b5cf6;
+      --accent-dim: #6d28d9;
+      --mint: #2dd4bf;
+      --radius: 14px;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+      --bar-h: auto;
+      font-family: "Instrument Sans", system-ui, sans-serif;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      color: var(--text);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(139, 92, 246, 0.22), transparent 55%),
+        radial-gradient(900px 500px at 90% 0%, rgba(45, 212, 191, 0.12), transparent 50%),
+        linear-gradient(180deg, var(--bg0), var(--bg1) 40%, #0a0f16);
+      line-height: 1.55;
+    }
+    a { color: var(--mint); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .shell {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1rem max(1.1rem, env(safe-area-inset-right, 0px)) 3rem max(1.1rem, env(safe-area-inset-left, 0px));
+    }
+    .top {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .brand { display: flex; align-items: center; gap: 0.65rem; }
+    .logo {
+      width: 38px; height: 38px; border-radius: 11px;
+      object-fit: contain;
+      display: block;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+      flex-shrink: 0;
+      background: rgba(15, 23, 42, 0.5);
+    }
+    .brand h1 { margin: 0; font-size: 1.28rem; font-weight: 700; letter-spacing: -0.03em; }
+    .brand span { display: block; font-size: 0.74rem; color: var(--muted); font-weight: 500; margin-top: 0.05rem; }
+    .nav-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;
+      padding: 0.48rem 0.9rem; border-radius: 10px; font-weight: 600; font-size: 0.84rem;
+      border: 1px solid transparent; cursor: pointer; font-family: inherit;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-ghost { background: transparent; color: var(--muted); border-color: var(--border); }
+    .btn-ghost:hover { background: rgba(148, 163, 184, 0.08); color: var(--text); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+      color: #fff; box-shadow: 0 10px 36px rgba(109, 40, 217, 0.35);
+    }
+    .btn-primary:hover { filter: brightness(1.06); }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
+    .btn-secondary { background: var(--surface2); color: var(--text); border-color: var(--border); }
+    .btn-secondary:hover { border-color: rgba(148, 163, 184, 0.55); }
+    .btn-danger { background: transparent; color: #f87171; border-color: rgba(248, 113, 113, 0.35); }
+    .btn-danger:hover { background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.55); }
+    .btn-sm { padding: 0.38rem 0.65rem; font-size: 0.78rem; }
+    .row-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; }
+    .hidden { display: none !important; }
+
+    /* Guest: single centered column */
+    .guest-wrap { max-width: 440px; margin: 0 auto; }
+
+    /* Logged-in: dashboard strip at top (normal flow — must not use sticky) */
+    .dash-wrap {
+      position: relative;
+      top: auto;
+      margin: 0 -1.1rem 1.25rem;
+      padding: 0.65rem 1.1rem 0.85rem;
+      background: linear-gradient(180deg, rgba(8, 12, 18, 0.94) 0%, rgba(8, 12, 18, 0.82) 85%, rgba(8, 12, 18, 0.55) 100%);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    .dash-inner { max-width: 1100px; margin: 0 auto; }
+    .dash-row {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1rem;
+    }
+    .dash-left { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; min-width: 0; }
+    .plan-pill {
+      font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 0.28rem 0.6rem; border-radius: 999px;
+      background: rgba(139, 92, 246, 0.28); color: #e9d5ff; border: 1px solid rgba(167, 139, 250, 0.45);
+      white-space: nowrap;
+    }
+    .status-dot {
+      font-size: 0.78rem; font-weight: 600; color: var(--muted);
+      display: inline-flex; align-items: center; gap: 0.35rem;
+    }
+    .status-dot::before {
+      content: ""; width: 7px; height: 7px; border-radius: 50%;
+      background: var(--mint); box-shadow: 0 0 10px rgba(45, 212, 191, 0.6);
+    }
+    .dash-metrics {
+      display: flex; flex-wrap: wrap; align-items: stretch; gap: 0.45rem;
+      margin-top: 0.55rem;
+    }
+    .mini-stat {
+      flex: 1 1 auto; min-width: 5.5rem; max-width: 12rem;
+      padding: 0.45rem 0.65rem; border-radius: 10px;
+      background: rgba(15, 23, 42, 0.65); border: 1px solid var(--border);
+    }
+    .mini-stat b { display: block; font-size: 1.05rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+    .mini-stat span { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
+    .dash-meter-wrap { margin-top: 0.5rem; max-width: 420px; }
+    .dash-meter-wrap label { font-size: 0.65rem; color: var(--muted); margin-bottom: 0.2rem; display: block; }
+    meter {
+      width: 100%; height: 8px; border-radius: 99px; overflow: hidden;
+      border: none; background: rgba(15, 23, 42, 0.8);
+    }
+    meter::-webkit-meter-bar { background: rgba(15, 23, 42, 0.8); border-radius: 99px; }
+    meter::-webkit-meter-optimum-value { background: linear-gradient(90deg, var(--accent), #22d3ee); border-radius: 99px; }
+    meter::-moz-meter-bar { background: rgba(15, 23, 42, 0.8); border-radius: 99px; }
+    meter::-moz-meter-optimum { background: linear-gradient(90deg, var(--accent), #22d3ee); }
+    .dash-key {
+      margin: 0.45rem 0 0;
+      font-size: 0.72rem; color: var(--muted);
+    }
+    .dash-key code { color: #cbd5e1; font-size: 0.7rem; }
+    .dash-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; flex-shrink: 0; }
+
+    .main-col { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.15rem; }
+
+    .card {
+      background: var(--surface);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.35rem;
+      box-shadow: var(--shadow);
+    }
+    .card h2 {
+      margin: 0 0 0.35rem;
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #c4b5fd;
+    }
+    .card > p.lead { margin: 0 0 1rem; color: var(--muted); font-size: 0.88rem; }
+    label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+      margin-bottom: 0.32rem;
+    }
+    input, select {
+      width: 100%;
+      padding: 0.6rem 0.7rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.65);
+      color: var(--text);
+      font-size: 0.92rem;
+      font-family: inherit;
+      margin-bottom: 0.85rem;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    input:focus, select:focus {
+      border-color: rgba(139, 92, 246, 0.65);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.18);
+    }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+    @media (max-width: 560px) { .row2 { grid-template-columns: 1fr; } }
+    .tabs {
+      display: flex; gap: 0.3rem; margin-bottom: 0.9rem;
+      padding: 0.22rem; border-radius: 11px; background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border);
+    }
+    .tabs button {
+      flex: 1; border: none; background: transparent; color: var(--muted);
+      padding: 0.5rem 0.65rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; font-family: inherit;
+    }
+    .tabs button.active { background: rgba(139, 92, 246, 0.25); color: var(--text); }
+    .alert {
+      padding: 0.6rem 0.8rem; border-radius: 10px; font-size: 0.85rem; margin-bottom: 0.9rem;
+      border: 1px solid rgba(251, 113, 133, 0.45); background: rgba(251, 113, 133, 0.1); color: #fecdd3;
+    }
+    .alert[hidden] { display: none !important; }
+    .success {
+      border-color: rgba(45, 212, 191, 0.45); background: rgba(45, 212, 191, 0.1); color: #ccfbf1;
+    }
+    details.adv { margin: 0.45rem 0 0.85rem; border-radius: 10px; border: 1px dashed var(--border); padding: 0.3rem 0.65rem; }
+    details.adv summary { cursor: pointer; font-weight: 600; color: var(--muted); font-size: 0.84rem; padding: 0.32rem 0; }
+    .chk { display: flex; align-items: flex-start; gap: 0.55rem; margin: 0.65rem 0 0.85rem; font-size: 0.85rem; color: #cbd5e1; }
+    .chk input { width: auto; margin: 0.18rem 0 0; }
+    .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.78rem; word-break: break-all; }
+    .result-grid { display: grid; gap: 0.9rem; margin-top: 0.85rem; }
+    @media (min-width: 560px) { .result-grid { grid-template-columns: 1fr auto; align-items: start; } }
+    .qr-wrap {
+      background: #fff; border-radius: 12px; padding: 9px; display: inline-block;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+    }
+    .qr-wrap img { display: block; width: 156px; height: 156px; }
+    .qr-hint { margin: 0.55rem 0 0; font-size: 0.78rem; color: var(--muted); line-height: 1.45; max-width: 220px; }
+    .copy-row { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; margin-top: 0.45rem; }
+    .pill {
+      display: inline-block; padding: 0.18rem 0.5rem; border-radius: 999px;
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+      background: rgba(139, 92, 246, 0.25); color: #ddd6fe; border: 1px solid rgba(167, 139, 250, 0.35);
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+    th, td { text-align: left; padding: 0.5rem 0.35rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--muted); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(139, 92, 246, 0.04); }
+    .muted { color: var(--muted); }
+    .foot { margin-top: 2.25rem; text-align: center; font-size: 0.78rem; color: var(--muted); }
+
+    /* -------- Phones & small tablets -------- */
+    @media (max-width: 640px) {
+      .shell {
+        max-width: none;
+        padding: max(0.75rem, env(safe-area-inset-top, 0.75rem)) max(0.75rem, env(safe-area-inset-right, 0.75rem))
+          max(2rem, env(safe-area-inset-bottom, 2rem)) max(0.75rem, env(safe-area-inset-left, 0.75rem));
+      }
+      .top {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.65rem;
+        margin-bottom: 1rem;
+      }
+      .brand h1 { font-size: 1.2rem; }
+      .brand span { font-size: 0.72rem; }
+      .nav-actions { justify-content: stretch; }
+      .nav-actions .btn { flex: 1; justify-content: center; min-height: 44px; }
+
+      .guest-wrap { max-width: none; width: 100%; }
+
+      .dash-wrap {
+        margin: 0 0 1rem;
+        padding: 0.75rem 0.85rem 0.95rem;
+        border-radius: 12px;
+      }
+      .dash-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.65rem;
+      }
+      .dash-left { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 0.15rem; gap: 0.45rem; }
+      .dash-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.45rem;
+        width: 100%;
+      }
+      .dash-actions .btn,
+      .dash-actions a.btn {
+        min-height: 46px;
+        width: 100%;
+        touch-action: manipulation;
+      }
+      /* Third button spans full row */
+      .dash-actions > :nth-child(3) { grid-column: 1 / -1; }
+
+      .dash-metrics {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+      }
+      .mini-stat {
+        min-width: 0;
+        max-width: none;
+        padding: 0.55rem 0.6rem;
+      }
+      .mini-stat b { font-size: 1.1rem; }
+      .dash-meter-wrap { max-width: none; }
+      meter { height: 10px; }
+      .dash-key { font-size: 0.75rem; word-break: break-all; }
+      .dash-key code { font-size: 0.68rem; display: inline-block; max-width: 100%; }
+
+      .main-col { gap: 1rem; width: 100%; }
+
+      .card { padding: 1rem 0.95rem; border-radius: 12px; }
+      .card h2 { font-size: 0.88rem; }
+      .card > p.lead { font-size: 0.86rem; }
+
+      /* 16px+ stops iOS Safari auto-zoom on field focus */
+      input, select, textarea {
+        font-size: 16px !important;
+        padding: 0.7rem 0.75rem;
+        margin-bottom: 0.75rem;
+      }
+      .tabs button {
+        min-height: 46px;
+        font-size: 0.88rem;
+        touch-action: manipulation;
+      }
+      .btn {
+        min-height: 46px;
+        padding: 0.55rem 1rem;
+        font-size: 0.9rem;
+        touch-action: manipulation;
+      }
+      .btn-sm { min-height: 44px; font-size: 0.85rem; }
+
+      details.adv summary { min-height: 44px; align-items: center; display: flex; }
+      .chk { align-items: center; }
+      .chk input { width: 1.1rem; height: 1.1rem; margin: 0; }
+
+      .result-grid { grid-template-columns: 1fr; justify-items: center; }
+      .qr-wrap img { width: min(200px, 70vw); height: auto; aspect-ratio: 1; }
+      .copy-row { flex-direction: column; }
+      .copy-row .btn { width: 100%; }
+
+      .links-scroll-wrap {
+        margin: 0 -0.25rem;
+        padding: 0 0.25rem;
+      }
+      table { font-size: 0.8rem; }
+      th, td { padding: 0.65rem 0.4rem; }
+      th { font-size: 0.6rem; }
+    }
+
+    .links-scroll-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="top">
+      <div class="brand">
+        <img class="logo" src="/branding/shrinkpath-icon-192.png" width="38" height="38" alt="" decoding="async" />
+        <div>
+          <h1>ShrinkPath</h1>
+          <span>Short links · analytics · API</span>
+        </div>
+      </div>
+      <div class="nav-actions">
+        <a class="btn btn-ghost btn-sm" href="/swagger-ui.html" target="_blank" rel="noopener">API docs</a>
+      </div>
+    </header>
+
+    <!-- Guest -->
+    <div id="guestOnly" class="guest-wrap">
+      <section class="card" id="authCard">
+        <h2>Account</h2>
+        <p class="lead">Register or sign in. Your API key stays in this browser only.</p>
+        <div class="alert" id="authErr" hidden></div>
+        <div class="tabs" role="tablist">
+          <button type="button" class="active" id="tabReg">Register</button>
+          <button type="button" id="tabLog">Sign in</button>
+        </div>
+        <div id="panelReg">
+          <label for="regEmail">Work email</label>
+          <input id="regEmail" type="email" autocomplete="email" placeholder="you@company.com" />
+          <label for="regPass">Password (8+ chars)</label>
+          <input id="regPass" type="password" autocomplete="new-password" />
+          <label for="regCo">Company (optional)</label>
+          <input id="regCo" type="text" placeholder="Acme Inc." />
+          <button type="button" class="btn btn-primary" id="btnRegister" style="width:100%">Create account</button>
+        </div>
+        <div id="panelLog" class="hidden">
+          <label for="logEmail">Email</label>
+          <input id="logEmail" type="email" autocomplete="username" />
+          <label for="logPass">Password</label>
+          <input id="logPass" type="password" autocomplete="current-password" />
+          <button type="button" class="btn btn-primary" id="btnLogin" style="width:100%">Sign in</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Logged-in: top dashboard bar + single column (bar scrolls away) -->
+    <div id="appOnly" class="hidden">
+      <div class="dash-wrap">
+        <div class="dash-inner">
+          <div class="dash-row">
+            <div class="dash-left">
+              <span class="plan-pill" id="planPill">—</span>
+              <span class="status-dot" id="statusLine">—</span>
+            </div>
+            <div class="dash-actions">
+              <button type="button" class="btn btn-ghost btn-sm" id="btnCopyApiKey">Copy API key</button>
+              <a class="btn btn-ghost btn-sm" href="/swagger-ui.html" target="_blank" rel="noopener">API docs</a>
+              <button type="button" class="btn btn-secondary btn-sm" id="btnSignOut">Sign out</button>
+            </div>
+          </div>
+          <div class="dash-metrics" id="usageStats"></div>
+          <div class="dash-meter-wrap">
+            <label for="usageMeter">Monthly link creates</label>
+            <meter id="usageMeter" min="0" max="100" low="70" high="90" optimum="0" value="0"></meter>
+          </div>
+          <p class="dash-key">API key <code class="mono" id="keyHint">—</code></p>
+        </div>
+      </div>
+
+      <div class="main-col">
+        <section class="card" id="createCard">
+          <h2>New short link</h2>
+          <p class="lead">Destinations are validated for safer redirects.</p>
+          <div class="alert" id="createErr" hidden></div>
+          <div class="alert success hidden" id="createOk" role="status"></div>
+          <label for="targetUrl">Destination URL</label>
+          <input id="targetUrl" type="url" placeholder="https://product.example.com/launch" />
+          <div class="row2">
+            <div>
+              <label for="title">Label (optional)</label>
+              <input id="title" type="text" placeholder="Spring launch" />
+            </div>
+            <div>
+              <label for="customCode">Custom slug</label>
+              <input id="customCode" type="text" placeholder="auto if empty" maxlength="32" />
+            </div>
+          </div>
+          <details class="adv">
+            <summary>Advanced — password, expiry, UTM, delay, chaos</summary>
+            <div class="row2" style="margin-top:0.65rem">
+              <div>
+                <label for="linkPass">Link password</label>
+                <input id="linkPass" type="password" placeholder="optional" />
+              </div>
+              <div>
+                <label for="expiresAt">Expires (ISO instant)</label>
+                <input id="expiresAt" type="text" placeholder="2030-12-31T23:59:59Z" />
+              </div>
+            </div>
+            <div class="row2">
+              <div>
+                <label for="maxClicks">Max clicks</label>
+                <input id="maxClicks" type="number" min="1" placeholder="unlimited" />
+              </div>
+              <div>
+                <label for="httpStatus">HTTP status</label>
+                <select id="httpStatus">
+                  <option value="302" selected>302 Found</option>
+                  <option value="301">301 Moved</option>
+                </select>
+              </div>
+            </div>
+            <label for="utmPreset">UTM preset</label>
+            <input id="utmPreset" type="text" placeholder="utm_source=newsletter&utm_medium=email" />
+            <div class="row2">
+              <div>
+                <label for="redirectDelaySeconds">Delay (seconds)</label>
+                <input id="redirectDelaySeconds" type="number" value="0" min="0" max="120" />
+              </div>
+              <div class="chk" style="margin-top:1.35rem">
+                <input id="chaosMode" type="checkbox" />
+                <label for="chaosMode" style="margin:0;text-transform:none;letter-spacing:0;font-size:0.85rem;font-weight:500;color:#cbd5e1">
+                  Chaos mode (small chance of a surprise redirect)
+                </label>
+              </div>
+            </div>
+          </details>
+          <button type="button" class="btn btn-primary" id="btnShorten" style="width:100%;margin-top:0.2rem">Create short link</button>
+        </section>
+
+        <section class="card hidden" id="resultCard">
+          <h2>Created <span class="pill">save secret</span></h2>
+          <p class="lead mono" id="shortUrlLine"></p>
+          <div class="copy-row">
+            <button type="button" class="btn btn-secondary btn-sm" id="btnCopyUrl">Copy short URL</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btnCopySecret">Copy manage token</button>
+          </div>
+          <div class="result-grid">
+            <pre class="mono" id="jsonOut" style="margin:0;padding:0.75rem;background:rgba(15,23,42,0.55);border-radius:10px;border:1px solid var(--border);overflow:auto;max-height:200px;font-size:0.7rem"></pre>
+            <div>
+              <div class="qr-wrap">
+                <img id="qrImg" alt="QR code for short URL" width="156" height="156" />
+              </div>
+              <p class="qr-hint" id="qrHint">Scan with your phone camera to open your short link.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="card" id="linksCard">
+          <h2>Your links</h2>
+          <p class="lead">Your links — the plan bar above scrolls away with the page.</p>
+          <div class="links-scroll-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Short</th>
+                  <th>Target</th>
+                  <th>Clicks</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="linksBody"></tbody>
+            </table>
+          </div>
+          <button type="button" class="btn btn-ghost" id="btnRefreshLinks" style="width:100%;margin-top:0.65rem">Refresh list</button>
+        </section>
+      </div>
+    </div>
+
+    <p class="foot">ShrinkPath · MongoDB · Actuator · OpenAPI</p>
+  </div>
+
+  <script>
+    const LS_KEY = "shrinkpath_api_key";
+    const $ = (id) => document.getElementById(id);
+
+    function getKey() { return localStorage.getItem(LS_KEY) || ""; }
+    function setKey(k) { localStorage.setItem(LS_KEY, k); }
+    function clearKey() { localStorage.removeItem(LS_KEY); }
+
+    function authHeaders() {
+      const k = getKey();
+      const h = { "Content-Type": "application/json" };
+      if (k) h["X-API-Key"] = k;
+      return h;
+    }
+
+    async function parseErr(res) {
+      const t = await res.text();
+      try { const j = JSON.parse(t); return j.error || t; } catch (_) { return t || res.statusText; }
+    }
+
+    function setAuthed(authed) {
+      $("guestOnly").classList.toggle("hidden", authed);
+      $("appOnly").classList.toggle("hidden", !authed);
+    }
+
+    function tab(name) {
+      const reg = name === "reg";
+      $("tabReg").classList.toggle("active", reg);
+      $("tabLog").classList.toggle("active", !reg);
+      $("panelReg").classList.toggle("hidden", !reg);
+      $("panelLog").classList.toggle("hidden", reg);
+    }
+
+    $("tabReg").addEventListener("click", () => tab("reg"));
+    $("tabLog").addEventListener("click", () => tab("log"));
+
+    $("btnSignOut").addEventListener("click", () => {
+      clearKey();
+      $("resultCard").classList.add("hidden");
+      setAuthed(false);
+      tab("reg");
+    });
+
+    $("btnCopyApiKey").addEventListener("click", async () => {
+      const k = getKey();
+      if (!k) return;
+      await navigator.clipboard.writeText(k);
+      const ok = $("createOk");
+      ok.textContent = "API key copied.";
+      ok.classList.remove("hidden");
+      setTimeout(() => ok.classList.add("hidden"), 2200);
+    });
+
+    async function loadMe() {
+      const res = await fetch("/api/account/me", { headers: authHeaders() });
+      if (!res.ok) throw new Error(await parseErr(res));
+      return res.json();
+    }
+
+    async function loadLinks() {
+      const res = await fetch("/api/my/links", { headers: authHeaders() });
+      if (!res.ok) throw new Error(await parseErr(res));
+      return res.json();
+    }
+
+    function renderUsage(me) {
+      const planLabel = typeof me.plan === "string" ? me.plan : (me.plan && me.plan.name) || "FREE";
+      $("planPill").textContent = planLabel;
+      $("statusLine").textContent = me.subscriptionStatus || "—";
+      const k = getKey();
+      $("keyHint").textContent = k || "—";
+      const maxC = me.maxCreatesPerMonth || 1;
+      const used = me.linksCreatedThisPeriod || 0;
+      const m = $("usageMeter");
+      m.max = maxC;
+      m.value = Math.min(used, maxC);
+      $("usageStats").innerHTML = [
+        { v: me.activeLinks, l: "Active links" },
+        { v: used + " / " + maxC, l: "Creates (mo)" },
+        { v: me.maxActiveLinks, l: "Active cap" }
+      ].map((s) => "<div class=\"mini-stat\"><b>" + s.v + "</b><span>" + s.l + "</span></div>").join("");
+    }
+
+    async function deleteLink(code) {
+      if (!confirm("Delete /" + code + "? The short URL will stop working.")) return;
+      const res = await fetch("/api/links/" + encodeURIComponent(code), {
+        method: "DELETE",
+        headers: authHeaders()
+      });
+      if (!res.ok) throw new Error(await parseErr(res));
+      await refreshDashboard();
+    }
+
+    function renderLinks(rows) {
+      const tb = $("linksBody");
+      tb.innerHTML = "";
+      if (!rows.length) {
+        tb.innerHTML = "<tr><td colspan=\"4\" class=\"muted\">No links yet — create one above.</td></tr>";
+        return;
+      }
+      const base = location.origin;
+      for (const r of rows) {
+        const tr = document.createElement("tr");
+        const shortUrl = r.shortUrl || (base + "/r/" + r.shortCode);
+        const tgt = (r.targetUrl || "").replace(/</g, "&lt;");
+        tr.innerHTML =
+          "<td><a href=\"" + shortUrl + "\" target=\"_blank\" rel=\"noopener\">/" + r.shortCode + "</a></td>" +
+          "<td class=\"mono muted\" style=\"max-width:240px\">" + tgt + "</td>" +
+          "<td>" + r.clickCount + "</td>" +
+          "<td><div class=\"row-actions\">" +
+          "<a href=\"" + shortUrl + "\" target=\"_blank\" rel=\"noopener\">Open</a>" +
+          "<button type=\"button\" class=\"btn btn-danger btn-sm\" data-delete-code=\"" + r.shortCode + "\">Delete</button>" +
+          "</div></td>";
+        tr.querySelector("[data-delete-code]").addEventListener("click", async (ev) => {
+          const btn = ev.currentTarget;
+          btn.disabled = true;
+          try {
+            await deleteLink(r.shortCode);
+          } catch (e) {
+            alert(e.message || String(e));
+          } finally {
+            btn.disabled = false;
+          }
+        });
+        tb.appendChild(tr);
+      }
+    }
+
+    let lastSecret = "";
+    let lastShortUrl = "";
+
+    async function refreshDashboard() {
+      try {
+        const me = await loadMe();
+        renderUsage(me);
+        const links = await loadLinks();
+        renderLinks(links);
+      } catch (e) {
+        clearKey();
+        setAuthed(false);
+      }
+    }
+
+    $("btnRegister").addEventListener("click", async () => {
+      const err = $("authErr");
+      err.hidden = true;
+      const body = {
+        email: $("regEmail").value.trim(),
+        password: $("regPass").value,
+        companyName: $("regCo").value.trim() || undefined
+      };
+      if (!body.email || !body.password) {
+        err.textContent = "Email and password are required.";
+        err.hidden = false;
+        return;
+      }
+      $("btnRegister").disabled = true;
+      try {
+        const res = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) throw new Error(await parseErr(res));
+        const data = await res.json();
+        setKey(data.apiKey);
+        setAuthed(true);
+        await refreshDashboard();
+      } catch (e) {
+        err.textContent = e.message || String(e);
+        err.hidden = false;
+      } finally {
+        $("btnRegister").disabled = false;
+      }
+    });
+
+    $("btnLogin").addEventListener("click", async () => {
+      const err = $("authErr");
+      err.hidden = true;
+      const body = {
+        email: $("logEmail").value.trim(),
+        password: $("logPass").value
+      };
+      $("btnLogin").disabled = true;
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) throw new Error(await parseErr(res));
+        const data = await res.json();
+        setKey(data.apiKey);
+        setAuthed(true);
+        await refreshDashboard();
+      } catch (e) {
+        err.textContent = e.message || String(e);
+        err.hidden = false;
+      } finally {
+        $("btnLogin").disabled = false;
+      }
+    });
+
+    $("btnShorten").addEventListener("click", async () => {
+      const err = $("createErr");
+      const ok = $("createOk");
+      err.hidden = true;
+      ok.classList.add("hidden");
+      $("resultCard").classList.add("hidden");
+      const targetUrl = $("targetUrl").value.trim();
+      if (!targetUrl) {
+        err.textContent = "Enter a destination URL.";
+        err.hidden = false;
+        return;
+      }
+      const body = {
+        targetUrl,
+        title: $("title").value.trim() || undefined,
+        customCode: $("customCode").value.trim() || undefined,
+        password: $("linkPass").value || undefined,
+        expiresAt: $("expiresAt").value.trim() || undefined,
+        maxClicks: $("maxClicks").value ? Number($("maxClicks").value) : undefined,
+        httpStatus: Number($("httpStatus").value) || 302,
+        utmPreset: $("utmPreset").value.trim() || undefined,
+        redirectDelaySeconds: Number($("redirectDelaySeconds").value) || 0,
+        chaosMode: $("chaosMode").checked
+      };
+      $("btnShorten").disabled = true;
+      try {
+        const res = await fetch("/api/links", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) throw new Error(await parseErr(res));
+        const data = await res.json();
+        lastSecret = data.managementSecret;
+        lastShortUrl = data.shortUrl;
+        $("shortUrlLine").textContent = data.shortUrl;
+        $("jsonOut").textContent = JSON.stringify(data, null, 2);
+        const qrPath = data.qrUrl.startsWith("/") ? data.qrUrl : ("/api/links/" + encodeURIComponent(data.shortCode) + "/qr.png");
+        $("qrImg").src = qrPath + "?t=" + Date.now();
+        $("qrHint").textContent = "Scan to open: " + data.shortUrl;
+        $("resultCard").classList.remove("hidden");
+        ok.textContent = "Short link created.";
+        ok.classList.remove("hidden");
+        $("targetUrl").value = "";
+        await refreshDashboard();
+      } catch (e) {
+        err.textContent = e.message || String(e);
+        err.hidden = false;
+      } finally {
+        $("btnShorten").disabled = false;
+      }
+    });
+
+    $("btnCopyUrl").addEventListener("click", async () => {
+      if (!lastShortUrl) return;
+      await navigator.clipboard.writeText(lastShortUrl);
+      $("createOk").textContent = "Short URL copied.";
+      $("createOk").classList.remove("hidden");
+    });
+    $("btnCopySecret").addEventListener("click", async () => {
+      if (!lastSecret) return;
+      await navigator.clipboard.writeText(lastSecret);
+      $("createOk").textContent = "Manage token copied.";
+      $("createOk").classList.remove("hidden");
+    });
+
+    $("btnRefreshLinks").addEventListener("click", () => refreshDashboard());
+
+    (async function init() {
+      if (getKey()) {
+        setAuthed(true);
+        try {
+          await refreshDashboard();
+        } catch (_) {
+          setAuthed(false);
+        }
+      } else {
+        setAuthed(false);
+      }
+    })();
+  </script>
+</body>
+</html>
