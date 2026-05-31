@@ -1,12 +1,15 @@
-# Build stage — curl/bash required for Maven wrapper (only-script) on Alpine
-FROM eclipse-temurin:21-jdk-alpine AS build
-RUN apk add --no-cache bash curl
+# Build with official Maven image (avoids mvnw/Alpine issues on Render)
+FROM maven:3.9.9-eclipse-temurin-21 AS build
 WORKDIR /app
-COPY mvnw pom.xml .mvn/ ./
-COPY src ./src
-RUN chmod +x mvnw && ./mvnw -B -DskipTests package
 
-# Run stage
+COPY pom.xml .
+RUN mvn -B -ntp dependency:go-offline -DskipTests
+
+COPY src ./src
+ENV MAVEN_OPTS="-Xmx768m"
+RUN mvn -B -ntp -DskipTests package
+
+# Slim runtime image
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
