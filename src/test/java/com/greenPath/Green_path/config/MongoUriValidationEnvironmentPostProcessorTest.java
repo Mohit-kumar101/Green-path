@@ -16,7 +16,7 @@ class MongoUriValidationEnvironmentPostProcessorTest {
 	void allowsAtlasUriOnRender() {
 		MockEnvironment env = new MockEnvironment();
 		env.setProperty("RENDER", "true");
-		env.setProperty("spring.data.mongodb.uri", "mongodb+srv://u:p@cluster0.abc.mongodb.net/greenpath");
+		env.setProperty("spring.mongodb.uri", "mongodb+srv://u:p@cluster0.abc.mongodb.net/greenpath");
 
 		assertThatCode(() -> processor.postProcessEnvironment(env, new SpringApplication()))
 				.doesNotThrowAnyException();
@@ -26,7 +26,7 @@ class MongoUriValidationEnvironmentPostProcessorTest {
 	void rejectsLocalhostOnRender() {
 		MockEnvironment env = new MockEnvironment();
 		env.setProperty("RENDER_SERVICE_NAME", "green-path");
-		env.setProperty("spring.data.mongodb.uri", "mongodb://localhost:27017/greenpath");
+		env.setProperty("spring.mongodb.uri", "mongodb://localhost:27017/greenpath");
 
 		assertThatThrownBy(() -> processor.postProcessEnvironment(env, new SpringApplication()))
 				.isInstanceOf(IllegalStateException.class)

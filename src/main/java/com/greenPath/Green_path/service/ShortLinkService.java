@@ -400,8 +400,8 @@ public class ShortLinkService {
 		return qrCodeService.pngForText(shortUrl);
 	}
 
-	public List<MyLinkSummaryResponse> listMine(Account account) {
-		String base = publicBaseUrl.replaceAll("/+$", "");
+	public List<MyLinkSummaryResponse> listMine(Account account, HttpServletRequest request) {
+		String base = PublicBaseUrlResolver.resolve(publicBaseUrl, request);
 		return shortLinkRepository.findByAccountIdAndActiveTrueOrderByCreatedAtDesc(account.getId()).stream()
 				.map(l -> MyLinkSummaryResponse.builder()
 						.shortCode(l.getShortCode())

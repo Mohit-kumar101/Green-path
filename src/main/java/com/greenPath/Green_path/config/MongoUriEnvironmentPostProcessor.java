@@ -18,7 +18,8 @@ public class MongoUriEnvironmentPostProcessor implements EnvironmentPostProcesso
 		var resolved = MongoUriSources.resolve(environment::getProperty);
 		if (resolved.isPresent()) {
 			Map<String, Object> properties = new HashMap<>();
-			properties.put("spring.data.mongodb.uri", resolved.get());
+			String uri = resolved.get();
+			properties.put(MongoUriSources.URI_PROPERTY, uri);
 			environment.getPropertySources().addFirst(new MapPropertySource("resolvedMongoUri", properties));
 			return;
 		}

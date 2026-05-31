@@ -8,9 +8,13 @@ import java.util.Optional;
 
 final class MongoUriSources {
 
+	/** Spring Boot 4: driver reads {@code spring.mongodb.uri} (not {@code spring.data.mongodb.uri}). */
+	static final String URI_PROPERTY = "spring.mongodb.uri";
+
 	/** MONGODB_URI first — avoid a blank/wrong SPRING_DATA_MONGODB_URI shadowing it on Render. */
 	static final List<String> ENV_KEYS = List.of(
 			"MONGODB_URI",
+			"SPRING_MONGODB_URI",
 			"SPRING_DATA_MONGODB_URI",
 			"MONGO_URI",
 			"MONGO_URL",

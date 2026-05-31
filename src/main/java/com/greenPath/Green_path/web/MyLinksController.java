@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import com.greenPath.Green_path.domain.Account;
 import com.greenPath.Green_path.dto.MyLinkSummaryResponse;
 import com.greenPath.Green_path.service.ShortLinkService;
@@ -21,7 +23,9 @@ public class MyLinksController {
 	private final ShortLinkService shortLinkService;
 
 	@GetMapping("/links")
-	public List<MyLinkSummaryResponse> myLinks(@RequestAttribute(ApiKeyAuthInterceptor.ACCOUNT_ATTR) Account account) {
-		return shortLinkService.listMine(account);
+	public List<MyLinkSummaryResponse> myLinks(
+			@RequestAttribute(ApiKeyAuthInterceptor.ACCOUNT_ATTR) Account account,
+			HttpServletRequest request) {
+		return shortLinkService.listMine(account, request);
 	}
 }

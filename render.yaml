@@ -4,9 +4,13 @@ services:
     name: green-path
     runtime: docker
     plan: free
-    healthCheckPath: /actuator/health
+    # Liveness only — full /actuator/health stays DOWN until Atlas accepts Render IPs
+    healthCheckPath: /actuator/health/liveness
     # Add MONGODB_URI and PUBLIC_BASE_URL in the Render dashboard (Environment tab).
+    # PUBLIC_BASE_URL example: https://green-path-2.onrender.com (no trailing slash)
     envVars:
+      - key: PUBLIC_BASE_URL
+        sync: false
       - key: URL_REQUIRE_HTTPS
         value: "true"
       - key: CLICK_FINGERPRINT_SALT

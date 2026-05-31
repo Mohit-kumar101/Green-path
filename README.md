@@ -42,7 +42,7 @@ All of the following require header **`X-API-Key`**.
 
 | Property | Default | Description |
 |----------|---------|-------------|
-| `spring.data.mongodb.uri` | `mongodb://localhost:27017/greenpath` | Mongo connection |
+| `spring.mongodb.uri` / `MONGODB_URI` | `mongodb://localhost:27017/greenpath` | Mongo connection (Spring Boot 4) |
 | `app.public-base-url` | `http://localhost:8080` | Base for short URLs and QR text |
 | `app.chaos-probability` | `0.12` | Per-hit probability when `chaosMode` is true |
 | `app.click-fingerprint-salt` | `greenpath-clicks` | Salt for hashing client IPs in click logs |

@@ -29,7 +29,7 @@ public class MongoDeploymentDiagnostics implements InfoContributor {
 	private final String renderExternalUrl;
 
 	public MongoDeploymentDiagnostics(
-			@Value("${spring.data.mongodb.uri:}") String configuredUri,
+			@Value("${spring.mongodb.uri:}") String configuredUri,
 			Environment environment) {
 		this.configuredUri = configuredUri;
 		this.envVarPresence = new LinkedHashMap<>();

@@ -19,7 +19,7 @@ class MongoUriEnvironmentPostProcessorTest {
 
 		processor.postProcessEnvironment(env, new SpringApplication());
 
-		assertThat(env.getProperty("spring.data.mongodb.uri"))
+		assertThat(env.getProperty("spring.mongodb.uri"))
 				.isEqualTo("mongodb+srv://cluster.example.net/greenpath");
 	}
 
@@ -31,7 +31,7 @@ class MongoUriEnvironmentPostProcessorTest {
 
 		processor.postProcessEnvironment(env, new SpringApplication());
 
-		assertThat(env.getProperty("spring.data.mongodb.uri"))
+		assertThat(env.getProperty("spring.mongodb.uri"))
 				.isEqualTo("mongodb+srv://cluster.example.net/greenpath");
 	}
 
@@ -42,7 +42,7 @@ class MongoUriEnvironmentPostProcessorTest {
 
 		processor.postProcessEnvironment(env, new SpringApplication());
 
-		assertThat(env.getProperty("spring.data.mongodb.uri")).isNull();
+		assertThat(env.getProperty("spring.mongodb.uri")).isNull();
 	}
 
 	@Test

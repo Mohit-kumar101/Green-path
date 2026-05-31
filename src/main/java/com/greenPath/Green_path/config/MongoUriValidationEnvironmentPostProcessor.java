@@ -23,7 +23,8 @@ public class MongoUriValidationEnvironmentPostProcessor implements EnvironmentPo
 							+ "Remove it from Environment, set MONGODB_URI to your Atlas URI, and redeploy.");
 		}
 
-		String host = MongoDeploymentDiagnostics.hostHint(environment.getProperty("spring.data.mongodb.uri", ""));
+		String host = MongoDeploymentDiagnostics.hostHint(
+				environment.getProperty(MongoUriSources.URI_PROPERTY, ""));
 		boolean localhost = host.contains("localhost") || host.contains("127.0.0.1") || "not-set".equals(host);
 
 		if (!localhost) {
