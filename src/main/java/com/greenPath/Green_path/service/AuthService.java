@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.greenPath.Green_path.domain.Account;
 import com.greenPath.Green_path.domain.Plan;
@@ -26,7 +25,6 @@ public class AuthService {
 
 	private final AccountRepository accountRepository;
 
-	@Transactional
 	public AuthResponse register(RegisterRequest request) {
 		String email = request.getEmail().strip().toLowerCase();
 		if (accountRepository.existsByEmailIgnoreCase(email)) {
